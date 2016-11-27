@@ -6,10 +6,12 @@ mu = 0.10 # Parameter for X
 sigma = 0.4 # Parameter for X
 
 # Begin approximating Sn 
+# Generate random values of N from poisson distribution 
 N_vector <- rpois(numb_sn, lambda)
 
 # Compute a sample of Sn 
 Sn_sample <- function(N, mean = mu, std = sigma){
+  # Draw N random variables from distribution of X
   log_X_k <- rnorm(N, mean = mu, sd = sigma)
   X_k <- exp(log_X_k)
   Sn <- sum(X_k)
