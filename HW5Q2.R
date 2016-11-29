@@ -101,3 +101,4 @@ lines(norm_tail, quantiles, type = 'l', col = 'blue', lwd = 2)
 lines(gamma_tail, quantiles, type = 'l', col = 'orange', lwd = 2)
 legend("bottomleft", c("Empirical", "Normal", "Gamma"), lwd = 2, col = c("red", "blue", "orange"))
 
+# The gamma approximation seems to work better because it is close to the empirical distribution. 
