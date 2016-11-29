@@ -42,22 +42,32 @@ makeHist(Sn_MC_samples)
 ####################### Quantile Stuff #############################
 #################################################################
 
-quantiles <- seq(from = 0.95, to = 0.9999, by = 0.0001)
+quantiles <- seq(from = 0.95, to = 0.99999, by = 0.00001)
 
 # Empirical distribution quantiles 
 empirical_tail <- quantile(Sn_MC_samples, quantiles)
-emp_tail <- 1 - empirical_tail 
+emp_tail <- empirical_tail 
 
 # Normal Approximation quantiles 
-Sn_mean <- mean(Sn_MC_samples)
-Sn_sd <- sd(Sn_MC_samples)
+Sn_mean <- exp(mu)*lambda
+Sn_sd <- lambda*sigma^2* + exp(mu^2)*lambda
 norm_tail_approx <- qnorm(quantiles, Sn_mean, Sn_sd)
-norm_tail <- 1- norm_tail_approx 
+norm_tail <- norm_tail_approx 
 
 # Gamma tail approx ... Equations from the book - pg 477 of pdf 
 # Or simplified equations on 497 in appendix
+EX1 <- mean(Sn_MC_samples) # E[X]
+EX2 <- mean(Sn_MC_samples^2) # E[X^2]
+EX3 <- mean(Sn_MC_samples^3) # E[X^3]
 
-# This is not the 3 parameter gamma.... 
+alpha_g <- (2*sqrt(lambda*EX2^3)/EX3)^2
+beta_g <- sqrt(alpha_g/ (lambda*EX2))
+k_g <- lambda*EX1 - alpha_g/beta_g
+
+library(FAdist)
+gamma_tail_approx2 <- qgamma3(quantiles,shape = alpha_g, scale = beta_g, thres=k_g )
+gamma_tail2 <-1- gamma_tail_approx 
+
 
 # Find the parameters using MLE in the MASS package
 library(MASS)
@@ -66,14 +76,14 @@ gamma_shape <- gamma_params$estimate[1]
 gamma_rate <- gamma_params$estimate[2]
 # Compute the quantiles and find the tail distribution 
 gamma_tail_approx <- qgamma(quantiles,shape = gamma_shape, rate = gamma_rate )
-gamma_tail <- 1- gamma_tail_approx 
+gamma_tail <- gamma_tail_approx 
 
 
 # Plot on log log scale 
 # NOT ON LOG LOG SCALE
-plot(quantiles,emp_tail, type = 'l', col = 'red', lwd = 2)
+plot(emp_tail, quantiles, type = 'l', log = 'xy', ylim=c(min(ylims), max(ylims)), col = 'red', lwd = 2)
 lines(quantiles, norm_tail, type = 'l', col = 'blue', lwd = 2)
-lines(quantiles, gamma_tail, type = 'l', col = 'orange', lwd = 2)
+lines(quantiles, gamma_tail2, type = 'l', col = 'orange', lwd = 2)
 legend("bottomleft", c("Empirical", "Normal", "Gamma"), lwd = 2, col = c("red", "blue", "orange"))
 
 # The approximations should not straddle the empirical distribution 
@@ -82,7 +92,10 @@ legend("bottomleft", c("Empirical", "Normal", "Gamma"), lwd = 2, col = c("red", 
 # Plotting again to look more like his but same analytical problems 
 # Switch x and y axis 
 
-plot(emp_tail, quantiles, type = 'l', col = 'red', lwd = 2)
+ylims <- c(gamma_tail_approx2, norm_tail_approx)
+
+plot(emp_tail, quantiles, type = 'l', log = 'xy', ylim=c(min(ylims), max(ylims)), col = 'red', lwd = 2)
 lines(norm_tail, quantiles, type = 'l', col = 'blue', lwd = 2)
-lines(gamma_tail, quantiles, type = 'l', col = 'orange', lwd = 2)
+lines(gamma_tail2, quantiles, type = 'l', col = 'orange', lwd = 2)
 legend("bottomleft", c("Empirical", "Normal", "Gamma"), lwd = 2, col = c("red", "blue", "orange"))
+

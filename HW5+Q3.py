@@ -1,19 +1,20 @@
 
 # coding: utf-8
 
-# Homework 5 Question 3 
-# Malcolm Taylor, Karen Pardo, Kulin Chheda 
+# # Homework 5 Question 3 
 
 # # Question 1:
 # Write explicitly the losses $L_{t+\Delta}$ in terms of quantities known at time t and the random variables $X_{t+\Delta} , s_{t+\Delta}$ 
 
-# $$L_{t+\Delta} = -\Delta_t (S^b_{t+\Delta} - S_{t+\Delta}) $$ 
+# $$L_{t+\Delta} = -\Delta_t (S^b_{t+\Delta} - S_{t}) $$ 
 # 
 # where 
 # 
-# $$ S^b_{t+\Delta} = - 1/2 s_{t+\Delta} * S_{t+\Delta} - S_{t+\Delta} $$
+# $$ \frac {1} {2} s_{t+\Delta} = \frac {S_{t+\Delta} - S^b_{t+\Delta}} {S_{t+\Delta}}  $$
 # 
-# $$ S^b_{t+\Delta} = -S_{t+\Delta} (1/2 s_{t+\Delta}-1) $$
+# $$ S^b_{t+\Delta} = - \frac {1} {2} s_{t+\Delta} * S_{t+\Delta} + S_{t+\Delta} $$
+# 
+# $$ S^b_{t+\Delta} = - S_{t+\Delta} (\frac {1} {2} s_{t+\Delta} - 1) $$
 # 
 # and 
 # 
@@ -21,17 +22,15 @@
 # 
 # so 
 # 
-# $$ S^b_{t+\Delta} = S_t * e^{X_{t+\Delta}}*(1/2 s_{t+\Delta}-1) $$
+# $$ S^b_{t+\Delta} = -S_t * e^{X_{t+\Delta}}*(\frac {1} {2} s_{t+\Delta} - 1) $$
 # 
 # 
 
 # The Losses can then be calculated using:: 
 # 
-# $$ L_{t+\Delta} = -\Delta_t [S_t * e^{X_{t+\Delta}}*(1/2 s_{t+\Delta}-1) - S_t * e^{X_{t+\Delta}} ] $$
+# $$ L_{t+\Delta} = -\Delta_t [-S_t * e^{X_{t+\Delta}}*(\frac {1} {2} s_{t+\Delta} - 1) - S_t * e^{X_{t+\Delta}} ] $$
 # 
-# $$ L_{t+\Delta} = -\Delta_t * S_t * e^{X_{t+\Delta}} [ (1/2 s_{t+\Delta}-1) - 1] $$
-# 
-# $$ L_{t+\Delta} = -\Delta_t * S_t * e^{X_{t+\Delta}} [ 1/2 s_{t+\Delta}-2] $$
+# $$ L_{t+\Delta} = -\Delta_t * [S_t * e^{X_{t+\Delta}} * (1- \frac {1} {2} s_{t+\Delta}) + S_t]$$
 
 # # Question 2 
 # 
@@ -41,11 +40,11 @@
 
 # The LC cost can be computed using k = 3, $ \mu_{s,t+\Delta} = 0.2 $ , $ \sigma_{s,t+\Delta} = 0.08, S_t = 59, \Delta_t = 100$,  
 
-# In[18]:
+# In[1]:
 
 k = 3
-mu_s = 0.2
-sigma_s = 0.08
+mu_s = 0.002
+sigma_s = 0.0008
 St = 59 
 delta_t = 100 
 
@@ -57,7 +56,7 @@ LC
 # $$Z_{1-\alpha} = Z_{0.01} = -2.326348 $$
 # 
 
-# In[19]:
+# In[2]:
 
 import math
 mu_t = 0 
@@ -67,20 +66,10 @@ VaR = St*delta_t*(1-math.exp(mu_t + sigma_t*Z_alpha))
 VaR
 
 
-# In[20]:
+# In[3]:
 
 LVar_ind_alpha = VaR+LC
 LVar_ind_alpha
-
-
-# In[ ]:
-
-
-
-
-# In[ ]:
-
-
 
 
 # # Question 3: 
@@ -88,7 +77,7 @@ LVar_ind_alpha
 
 # Start my importing packages and setting plot parameters 
 
-# In[21]:
+# In[4]:
 
 import numpy as np 
 import pandas as pd
@@ -101,45 +90,26 @@ alpha=alpha_scatterplot = 0.2
 alpha_bar_chart = 0.55
 
 
-
 # Create function to sample s and X from normal distributions with the respective mean and standard deviation 
 # Next we calculate the loss using the formula from part 1
 # 
 # We draw X and s from their respective normal distributions and then use the equation 
-# $$ L_{t+\Delta} = -\Delta_t * S_t * e^{X_{t+\Delta}} [ 1/2 s_{t+\Delta}-2] $$
+# 
+# $$ L_{t+\Delta} = -\Delta_t * [S_t * e^{X_{t+\Delta}} * (1- \frac {1} {2} s_{t+\Delta}) + S_t]$$
 # 
 
-# In[22]:
-
-def Lossfunction(mu_s, mu_t, sigma_s, sigma_t, St, delta_t):
-    s_sample = np.random.normal(loc = mu_s, scale = sigma_s)
-    X_sample = np.random.normal(loc = mu_t, scale= sigma_t)
-    Loss = -delta_t * St * np.exp(X_sample)*(0.5*s_sample-2)
-    return(Loss)
-
-
-# In[33]:
-
-s_sample = np.random.normal(loc = mu_s, scale = sigma_s)
-X_sample = np.random.normal(loc = mu_t, scale= sigma_t)
-Loss = -delta_t * St * np.exp(X_sample)*(0.5*s_sample-2)
-print(s_sample, X_sample)
-Loss
-
-
-# 
-# Pre allocate space and then simulate returns 100000 (numb_sim) times 
-
-# In[24]:
+# In[5]:
 
 numb_sim = 100000 # M 
 LVAR_sim = pd.Series(data = np.repeat(0,numb_sim))
+X_sample = np.random.normal(loc = mu_t, scale= sigma_t, size = numb_sim)
+s_sample = np.random.normal(loc = mu_s, scale = sigma_s, size = numb_sim)
 for sim in range(numb_sim):
-    LVAR_sim.loc[sim] = Lossfunction(mu_s, mu_t, sigma_s, sigma_t, St, delta_t)
+    LVAR_sim.loc[sim] = -delta_t *( St * np.exp(X_sample[sim])*( 1-0.5*s_sample[sim])+St)
 LVAR_sim.describe()
 
 
-# In[25]:
+# In[6]:
 
 LVAR_sim.plot(kind = 'hist', bins = 40)
 quantile99 = LVAR_sim.quantile(q=0.99)
@@ -147,15 +117,13 @@ plt.axvline(x = quantile99, color = 'r', linewidth = 2.0)
 
 
 # ### Part 1 ###
-# The confidence $\alpha$
-# 
-# *Not really sure what this means....*
+# The confidence $\alpha$ = 0.99
 
 # ### Part 2 ###
 # 
 # The estimate of $LVAR_{\alpha}^{sim}$ found via simulation 
 
-# In[26]:
+# In[7]:
 
 LVAR_99 = LVAR_sim.quantile(q=0.99)
 LVAR_99
@@ -165,7 +133,7 @@ LVAR_99
 # 
 # The theoretical $VaR_{\alpha} $ from question 2
 
-# In[27]:
+# In[8]:
 
 import math
 mu_t = 0 
@@ -180,7 +148,7 @@ VaR
 # The estimated liquidity cost $LC^{sim} = LVAR_{\alpha}^{sim} - VaR_{\alpha}$ 
 # 
 
-# In[28]:
+# In[9]:
 
 LC_sim = LVAR_99 - VaR
 LC_sim
@@ -190,7 +158,7 @@ LC_sim
 # The estimated percentage increase in the risk measure: 
 # $$ 100*(\frac{LVAR^{sim}_{\alpha}} {VaR_{\alpha}} - 1) $$
 
-# In[29]:
+# In[10]:
 
 100*(LVAR_99/VaR -1)
 
@@ -199,7 +167,7 @@ LC_sim
 # 
 # The industry approximate $LVAR^{ind}_{\alpha} $ 
 
-# In[30]:
+# In[11]:
 
 LVar_ind_alpha
 
@@ -208,7 +176,7 @@ LVar_ind_alpha
 # The industry liquidity cost LC 
 # 
 
-# In[31]:
+# In[12]:
 
 LC
 
@@ -216,16 +184,11 @@ LC
 # ### Part 8 ## 
 # The industry percentage increase in the risk measure: $ 100 \frac{LC} {VaR_{\alpha}} $
 
-# In[32]:
+# In[13]:
 
 100*(LC/VaR)
 
 
 # How do the risk measures and liquidity costs compare? 
 
-# *Not sure...* 
-
-# In[ ]:
-
-
-
+# Both estimates are lower than the analytical solution. The liquidity cost in the simulated case is much lower than in the analytical case. This accounts for most of the different in the VaR calculations. 
